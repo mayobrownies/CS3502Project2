@@ -39,7 +39,7 @@ The simulator reads process definitions from text files, executes different sche
 *   **`main.cpp`:** Handles command-line arguments (input filename), orchestrates file loading (`loadProcessesFromFile`), runs each scheduling algorithm simulation, collects results, and calls the comparison printing function (`printComparison`).
 *   **`Scheduler.cpp`:** Contains the core simulation logic for each scheduling algorithm (`runFCFS`, `runSJF`, `runSRTF`, `runPriority`, `runRoundRobin`, `runMLFQ`). Also includes the `calculateMetrics` function.
 *   **`Process.h`:** Defines the `Process` struct, which encapsulates all necessary attributes and state for a process within the simulation.
-*   **`Scheduler.h` (Optional):** If used, contains function prototypes and necessary includes for `Scheduler.cpp`.
+*   **`Scheduler.h`:** Contains function prototypes and necessary includes for `Scheduler.cpp`.
 *   **Input Files (`*.txt`):** Text files defining the processes for different test scenarios.
 
 ## Dependencies
