@@ -62,17 +62,18 @@ This project is designed to be compiled and run in a Linux-like environment, suc
 
 The project utilizes standard C++ libraries. Key headers include:
 
-*   `<iostream>`: For console input/output (e.g., printing results).
-*   `<vector>`: For storing collections of processes and results.
-*   `<string>`: For handling filenames and parsing lines.
+*   `<iostream>`: For console input/output (printing results, error messages).
 *   `<fstream>`: For reading the process definition files.
+*   `<vector>`: For storing collections of processes and simulation results.
+*   `<string>`: For handling filenames and processing text lines.
 *   `<sstream>`: For parsing comma-separated values from input lines.
-*   `<algorithm>`: For sorting processes (e.g., by arrival time) and finding elements (e.g., shortest job).
-*   `<list>`, `<queue>`: Used as ready queues in various scheduling algorithms.
+*   `<stdexcept>`: For throwing and catching runtime errors (e.g., file open, parsing issues).
+*   `<numeric>`: Used for accumulating sums (e.g., in metric calculations).
+*   `<algorithm>`: For sorting processes and finding elements (e.g., min element in SJF/SRTF).
 *   `<iomanip>`: For formatting the output comparison table (`std::setw`, `std::setprecision`).
-*   `<numeric>`: Potentially used for accumulating sums in metric calculations.
-*   `<limits>`: Potentially used for finding maximum/minimum values.
-*   `<map>` or similar: Potentially used within MLFQ to track process state across queues.
+*   `<queue>`: Used as a ready queue data structure (e.g., in RR, MLFQ).
+*   `<limits>`: Used for getting maximum integer values (e.g., initializing minimums in SRTF).
+*   `<list>`: Used as a ready queue/list data structure (e.g., in FCFS, SJF, SRTF).
 
 These headers provide necessary functions and classes for file I/O, data structures, algorithms, string manipulation, and formatted output.
 
