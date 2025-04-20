@@ -1,0 +1,7 @@
+# Edge Case: All Arrive at Time 0
+# ProcessID,ArrivalTime,BurstTime,Priority
+1,0,10,3
+2,0,5,1
+3,0,10,4
+4,0,7,2
+5,0,5,5 

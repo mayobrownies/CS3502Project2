@@ -1,0 +1,399 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{titling}
+\usepackage{url}
+\usepackage{enumitem}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{booktabs}
+\usepackage{siunitx}
+
+\geometry{margin=1in}
+
+\pretitle{\begin{center}\LARGE\bfseries}
+\posttitle{\par\end{center}\vskip 1.5em}
+\preauthor{\begin{center}\large}
+\postauthor{\end{center}}
+\predate{\begin{center}\large}
+\postdate{\end{center}\vskip 2em}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{1,1,1}
+
+\lstdefinestyle{cppstyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    language=C++
+}
+
+\definecolor{consolebg}{rgb}{0.95,0.95,0.95}
+\lstdefinestyle{consolestyle}{
+   backgroundcolor=\color{consolebg},
+   basicstyle=\ttfamily\footnotesize,
+   breakatwhitespace=true,
+   breaklines=true,
+   captionpos=b,
+   keepspaces=true,
+   numbers=none,
+   numbersep=0pt,
+   showspaces=false,
+   showstringspaces=false,
+   showtabs=false,
+   tabsize=2,
+   frame=single,
+   framesep=3pt,
+   xleftmargin=5pt,
+   xrightmargin=5pt,
+   keywordstyle={},
+   commentstyle={},
+   stringstyle={}
+}
+
+\lstset{style=cppstyle}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black, 
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=black,  
+    pdftitle={CS3502 Project 2: CPU Scheduling Simulation},
+    pdfauthor={Kris Prasad},
+    pdfsubject={Operating Systems Project},
+    pdfkeywords={CPU Scheduling, Operating Systems, C++, Simulation},
+}
+
+\title{CS3502 Project 2: CPU Scheduling Simulation}
+\author{Kris Prasad \\[0.5em]
+CS3502 Section 03 \\[0.5em]
+NETID: kprasad\\[0.5em]
+}
+\date{Submitted: April 25, 2025}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\LARGE\bfseries CS3502 Project 2: CPU Scheduling Simulation\par}
+    \vspace{2cm}
+    
+    {\large\bfseries Kris Prasad\par}
+    \vspace{0.5cm}
+    {\large CS3502 Section 03\par}
+    \vspace{0.5cm}
+    {\large NETID: kprasad\par}
+    \vspace{2cm}
+    
+    {\large Submitted: April 25, 2025\par}
+    
+    \vfill
+    
+\end{titlepage}
+
+\newpage
+
+\begin{abstract}
+This report details the design, implementation, and evaluation of a C++ based CPU scheduling simulator developed for CS3502, Project 2. The project focused on building a console application from the ground up to simulate and compare various CPU scheduling algorithms: First-Come, First-Served (FCFS), Shortest Job First (SJF), Shortest Remaining Time First (SRTF), Priority (Preemptive and Non-Preemptive), Round Robin (RR), and Multi-Level Feedback Queue (MLFQ). The simulator processes process definitions from input files and calculates standard performance metrics, including Average Waiting Time (AWT), Average Turnaround Time (ATT), CPU Utilization, Throughput, and Average Response Time (ART). These metrics facilitate a comparative analysis of the algorithms' effectiveness under different simulated workloads, encompassing basic scenarios, larger process sets, and specific edge cases, drawing upon concepts from operating systems literature \citep{silberschatz2018operating}.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Introduction}
+\subsection{Overview of CPU Scheduling}
+CPU scheduling is a core operating system task concerned with allocating the CPU resource among competing processes in the ready queue. The primary goal is to enhance system performance metrics such as CPU utilization, throughput, turnaround time, waiting time, and response time \citep{silberschatz2018operating}. Different scheduling algorithms employ distinct strategies to achieve these goals, often involving trade-offs. For instance, an algorithm optimizing for throughput might increase average waiting time. Understanding these algorithms and their performance characteristics is essential for designing efficient and responsive operating systems.
+
+\subsection{Project Goals and Context}
+This project, simulating a task for the fictional "OwlTech Systems," required the development and evaluation of a CPU scheduling simulator. The specific objectives were:
+\begin{itemize}
+    \item To implement a CPU scheduling simulator in C++.
+    \item To implement standard scheduling algorithms (FCFS, SJF, Priority, RR).
+    \item To implement at least two additional algorithms not typically found in basic simulators; for this project, SRTF and MLFQ were chosen.
+    \item To accurately calculate and report key performance metrics: AWT, ATT, CPU Utilization, Throughput, and ART.
+    \item To test the algorithms using various workloads (basic, large-scale, edge cases) and analyze their comparative performance.
+    \item To document the design, implementation, results, and analysis in a formal report.
+\end{itemize}
+The project necessitated choosing between extending a provided C# starter code or building a new implementation; the latter approach was selected.
+
+\subsection{Implementation Approach}
+A new CPU scheduling simulator was developed from scratch using C++11/17 features and the Standard Template Library (STL). A console-based application was chosen to focus development effort on the core simulation logic and algorithm implementation rather than a graphical interface. The simulator reads process definitions from text files, allowing easy configuration of test workloads. It implements the following CPU scheduling algorithms:
+\begin{itemize}
+    \item FCFS
+    \item SJF - Non-Preemptive
+    \item SRTF - Preemptive SJF
+    \item Priority Scheduling - Non-Preemptive (Lower number indicates higher priority)
+    \item Priority Scheduling - Preemptive (Lower number indicates higher priority)
+    \item RR - Implemented with a time quantum of 4 for testing.
+    \item MLFQ - Specific configuration: 3 queues (Q0: RR Quantum 8, Q1: RR Quantum 16, Q2: FCFS), with an aging mechanism (priority boost after 50 time units).
+\end{itemize}
+The design emphasizes modularity, with distinct components for process representation, file parsing, algorithm simulation, and results reporting.
+
+\section{Implementation Details}
+The C++ simulator is structured into several logical components, defined across header (\texttt{.h}) and source (\texttt{.cpp}) files.
+
+\subsection{Process Representation (\texttt{Process.h})}
+The \texttt{Process} struct acts as the Process Control Block (PCB) for the simulation, storing vital information and state for each process.
+\begin{lstlisting}[language=C++, caption={Process Struct Definition (Process.h)}, label={lst:process_struct}, style=cppstyle]
+/**
+ * @brief Represents a single process in the CPU scheduling simulation.
+ * Stores essential process characteristics and simulation state.
+ */
+struct Process {
+    int id;             // Process ID
+    int arrivalTime;    // Time the process arrives
+    int burstTime;      // Original CPU burst time required
+    int priority;       // Priority (lower number = higher priority)
+
+    // Metrics & State - Updated during simulation
+    int startTime = -1;         // Time process first starts execution
+    int completionTime = -1;    // Time process finishes execution
+    int waitingTime = 0;        // Total time spent waiting
+    int turnaroundTime = 0;     // Time from arrival to completion
+    int remainingBurstTime; // Time left to execute
+    int responseTime = -1;      // Time from arrival to first execution
+
+    /**
+     * @brief Constructs a Process object.
+     */
+    Process(int pid, int arrival, int burst, int prio)
+        : id(pid), arrivalTime(arrival), burstTime(burst), 
+          priority(prio), remainingBurstTime(burst) {}
+};
+\end{lstlisting}
+The constructor initializes the basic process attributes and sets the initial \texttt{remainingBurstTime} equal to the total \texttt{burstTime}. Metrics like \texttt{startTime}, \texttt{completionTime}, etc., are calculated during the simulation run.
+
+\subsection{Input File Handling (\texttt{main.cpp})}
+Processes are loaded from a text file specified via command-line argument. The \texttt{loadProcessesFromFile} function orchestrates this, calling \texttt{parseProcessLine} for each relevant line.
+\begin{lstlisting}[language=C++, caption={Input File Parsing Logic (main.cpp - Snippet)}, style=cppstyle]
+/**
+ * @brief Loads process definitions from a specified file.
+ */
+std::vector<Process> loadProcessesFromFile(const std::string& filename) {
+    std::ifstream infile(filename);
+    // ... (Error handling for file open) ...
+    
+    std::vector<Process> processes;
+    std::string line;
+    while (std::getline(infile, line)) {
+        // ... (Skip comments '#' and empty lines) ...
+        try {
+            processes.push_back(parseProcessLine(line));
+        } catch (const std::runtime_error& e) {
+            // ... (Error reporting) ...
+            throw; 
+        }
+    }
+    infile.close();
+    return processes;
+}
+
+/**
+ * @brief Parses a single line from the process input file.
+ * Expects format: ID,ArrivalTime,BurstTime,Priority
+ */
+Process parseProcessLine(const std::string& line) {
+    // ... (Uses stringstream to parse comma-separated integers) ...
+    // ... (Error handling for format and integer conversion) ...
+    return Process(values[0], values[1], values[2], values[3]);
+}
+\end{lstlisting}
+
+\subsection{Simulation Core and Scheduling Logic (\texttt{Scheduler.cpp})}
+Each scheduling algorithm is implemented in its own function (e.g., \texttt{runFCFS}). These functions typically share a common simulation structure:
+\begin{itemize}
+    \item Initialization: Set \texttt{currentTime = 0}, initialize ready queue(s), counters, etc.
+    \item Main Loop: Continues until all processes are completed.
+    \item Arrival Check: Add processes arriving at the current time to the appropriate ready queue/list.
+    \item Idle Check: If the CPU is idle, select the next process according to the algorithm's rules. Update \texttt{startTime} and \texttt{responseTime} if it's the process's first run.
+    \item Execution Step: If a process is running, decrement its \texttt{remainingBurstTime}, increment \texttt{currentTime}. Handle quantum expiry or preemption checks if applicable.
+    \item Completion Check: If \texttt{remainingBurstTime} reaches 0, record \texttt{completionTime}, move the process to a completed list, and set the CPU to idle.
+    \item Idle Time Advancement: If the CPU is idle and the ready queue is empty but processes are still pending arrival, advance \texttt{currentTime} to the next arrival time, accumulating idle time.
+\end{itemize}
+Data structures like \texttt{std::list<Process*>} and \texttt{std::queue<Process*>} are used for ready queues, storing pointers to avoid object copying.
+
+\subsection{Specific Algorithm Implementation Notes}
+\begin{itemize}
+    \item \textbf{SRTF}: Requires checking remaining burst times of ready processes against the running process at each time step or arrival event to handle preemption.
+    \item \textbf{Priority (Preemptive)}: Similar preemption logic to SRTF but based on the \texttt{priority} field.
+    \item \textbf{MLFQ}: The most complex, requiring management of multiple queues, process migration between queues based on quantum usage, priority-based queue selection, preemption handling across queues, and an aging mechanism involving tracking \texttt{lastExecutionTime} and periodically boosting processes from lower to higher queues. A helper struct \texttt{MlfqProcessData} was used to track queue-specific state. Detailed discussion on MLFQ concepts can be found in \citep{silberschatz2018operating} and visualization in \citep{nauer}.
+\end{itemize}
+
+\subsection{Metric Calculation and Output (\texttt{Scheduler.cpp})}
+The \texttt{calculateMetrics} function aggregates data from the completed processes list to compute the final performance averages (AWT, ATT, ART), CPU utilization, and throughput. The \texttt{printComparison} function uses \texttt{<iomanip>} features like \texttt{std::setw} to generate the aligned output table summarizing results from all algorithm runs.
+
+\section{Testing and Results}
+\subsection{Testing Methodology}
+The simulator's correctness and the performance characteristics of the implemented algorithms were evaluated using four distinct workloads, defined in separate text files:
+\begin{enumerate}[label=\arabic*)]
+    \item \textbf{\texttt{basic\_test.txt}:} A small baseline test set (5 processes) with simple parameters.
+    \item \textbf{\texttt{arrival0.txt}:} An edge case where all 5 processes arrive simultaneously (at time 0).
+    \item \textbf{\texttt{burst\_mix.txt}:} An edge case featuring 5 processes with a mix of very short and very long burst times.
+    \item \textbf{\texttt{large\_scale.txt}:} A larger test set (25 processes) with more varied arrival times and burst times to simulate higher system load.
+\end{enumerate}
+Each input file was passed to the compiled simulator via the command line (e.g., \texttt{./scheduler basic\_test.txt}), and the resulting comparison table was recorded.
+
+\subsection{Simulation Results}
+The performance metrics for each algorithm across the four test workloads are presented below. The tables use a fixed-width font style for numerical data to aid alignment.
+
+\begin{table}[htbp]
+\centering
+\caption{Results for \texttt{basic\_test.txt}}
+\label{tab:basic_results}
+\footnotesize
+\begin{tabular}{@{}l S[table-format=3.2] S[table-format=3.2] S[table-format=3.2] S[table-format=3.2] S[table-format=1.2]@{}}
+\toprule
+Algorithm                                     & {AWT} & {ATT} & {ART} & {Util(\%)} & {Thrpt}\\
+\midrule
+FCFS                                         & 11.40         & 17.00            & 11.40          & 100.00          & 0.18 \\
+SJF (Non-Preemptive)                         & 8.20          & 13.80            & 8.20           & 100.00          & 0.18 \\
+SRTF (Preemptive SJF)                        & 6.60          & 12.20            & 4.40           & 100.00          & 0.18 \\
+Priority (Non-Preemptive)                    & 10.60         & 16.20            & 10.60          & 100.00          & 0.18 \\
+Priority (Preemptive)                        & 9.60          & 15.20            & 7.80           & 100.00          & 0.18 \\
+Round Robin (Quantum=4)                      & 13.00         & 18.60            & 6.00           & 100.00          & 0.18 \\
+MLFQ (Q0:RR8, Q1:RR16, Q2:FCFS, Age:50)      & 12.40         & 18.00            & 11.00          & 100.00          & 0.18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Results for \texttt{arrival0.txt} (Edge Case)}
+\label{tab:arrival0_results}
+\footnotesize
+\begin{tabular}{@{}l S[table-format=3.2] S[table-format=3.2] S[table-format=3.2] S[table-format=3.2] S[table-format=1.2]@{}}
+\toprule
+Algorithm                                     & {AWT} & {ATT} & {ART} & {Util(\%)} & {Thrpt}\\
+\midrule
+FCFS                                         & 16.40         & 23.80            & 16.40          & 100.00          & 0.14 \\
+SJF (Non-Preemptive)                         & 11.80         & 19.20            & 11.80          & 100.00          & 0.14 \\
+SRTF (Preemptive SJF)                        & 11.80         & 19.20            & 11.80          & 100.00          & 0.14 \\
+Priority (Non-Preemptive)                    & 14.20         & 21.60            & 14.20          & 100.00          & 0.14 \\
+Priority (Preemptive)                        & 14.20         & 21.60            & 14.20          & 100.00          & 0.14 \\
+Round Robin (Quantum=4)                      & 25.00         & 32.40            & 8.00           & 100.00          & 0.14 \\
+MLFQ (Q0:RR8, Q1:RR16, Q2:FCFS, Age:50)      & 21.80         & 29.20            & 14.00          & 100.00          & 0.14 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Results for \texttt{burst\_mix.txt} (Edge Case)}
+\label{tab:burstmix_results}
+\footnotesize
+\begin{tabular}{@{}l S[table-format=3.2] S[table-format=3.2] S[table-format=3.2] S[table-format=3.2] S[table-format=1.2]@{}}
+\toprule
+Algorithm                                     & {AWT} & {ATT} & {ART} & {Util(\%)} & {Thrpt}\\
+\midrule
+FCFS                                         & 47.60         & 68.40            & 47.60          & 100.00          & 0.05 \\
+SJF (Non-Preemptive)                         & 39.20         & 60.00            & 39.20          & 100.00          & 0.05 \\
+SRTF (Preemptive SJF)                        & 12.00         & 32.80            & 0.40           & 100.00          & 0.05 \\
+Priority (Non-Preemptive)                    & 56.20         & 77.00            & 56.20          & 100.00          & 0.05 \\
+Priority (Preemptive)                        & 46.80         & 67.60            & 37.20          & 100.00          & 0.05 \\
+Round Robin (Quantum=4)                      & 24.00         & 44.80            & 4.20           & 100.00          & 0.05 \\
+MLFQ (Q0:RR8, Q1:RR16, Q2:FCFS, Age:50)      & 22.40         & 43.20            & 6.60           & 100.00          & 0.05 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Results for \texttt{large\_scale.txt}}
+\label{tab:large_results}
+\footnotesize
+\begin{tabular}{@{}l S[table-format=3.2] S[table-format=3.2] S[table-format=3.2] S[table-format=3.2] S[table-format=1.2]@{}}
+\toprule
+Algorithm                                     & {AWT} & {ATT} & {ART} & {Util(\%)} & {Thrpt}\\
+\midrule
+FCFS                                         & 112.80        & 124.36           & 112.80         & 100.00          & 0.09 \\
+SJF (Non-Preemptive)                         & 75.20         & 86.76            & 75.20          & 100.00          & 0.09 \\
+SRTF (Preemptive SJF)                        & 74.40         & 85.96            & 71.40          & 100.00          & 0.09 \\
+Priority (Non-Preemptive)                    & 100.12        & 111.68           & 100.12         & 100.00          & 0.09 \\
+Priority (Preemptive)                        & 104.68        & 116.24           & 89.12          & 100.00          & 0.09 \\
+Round Robin (Quantum=4)                      & 153.36        & 164.92           & 40.52          & 100.00          & 0.09 \\
+MLFQ (Q0:RR8, Q1:RR16, Q2:FCFS, Age:50)      & 150.12        & 161.68           & 59.60          & 100.00          & 0.09 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Analysis and Discussion}
+The collected results allow for a detailed comparison of the implemented scheduling algorithms across various workload types.
+
+\subsection{Algorithm Performance Comparison}
+\begin{itemize}
+    \item \textbf{FCFS}: As expected, FCFS is simple but generally inefficient in terms of average waiting and turnaround times (Tables \ref{tab:basic_results} through \ref{tab:large_results}). It performs particularly poorly when short jobs are stuck behind long ones (Table \ref{tab:burstmix_results}).
+    \item \textbf{SJF/SRTF}: These algorithms consistently provide the best or near-best performance for AWT and ATT, as they prioritize processes requiring less CPU time. SRTF, being preemptive, generally outperforms non-preemptive SJF, especially when short jobs arrive while longer ones are running (Table \ref{tab:burstmix_results}). The theoretical optimality of SRTF for AWT \citep{silberschatz2018operating} is supported by the data. Notably, in the \texttt{arrival0} scenario (Table \ref{tab:arrival0_results}), where preemption based on arrivals is impossible, SJF and SRTF yield identical results.
+    \item \textbf{Priority}: Performance is highly dependent on priority assignment. Without intelligent priority setting or aging, it doesn't guarantee good performance on time-based metrics and risks starving low-priority processes. The preemptive version offers better responsiveness (lower ART) compared to the non-preemptive version (Tables \ref{tab:basic_results}, \ref{tab:large_results}), although AWT/ATT might slightly increase due to preemption overhead or specific process interactions. The \texttt{arrival0} test again shows identical results for P and NP versions due to lack of preemption triggers.
+    \item \textbf{Round Robin}: RR consistently delivers the lowest (best) ART across most tests, particularly evident in the large-scale scenario (Table \ref{tab:large_results}). This confirms its suitability for interactive systems where responsiveness is key. However, this comes at the cost of significantly higher AWT and ATT compared to SJF/SRTF, reflecting the overhead associated with frequent context switching.
+    \item \textbf{MLFQ}: This algorithm demonstrates its goal of balancing competing objectives. Its AWT and ATT are generally situated between the extremes of RR and SRTF. Its ART is significantly better than non-preemptive algorithms and approaches that of RR. By prioritizing shorter/newer jobs initially (Q0) and demoting longer-running ones, while using aging to prevent starvation, it offers a compromise suitable for mixed workloads \citep{nauer}.
+\end{itemize}
+
+\subsection{Impact of Workloads}
+The different test cases effectively highlighted the strengths and weaknesses:
+\begin{itemize}
+    \item The \textbf{basic test} established baseline performance.
+    \item The \textbf{arrival0} test showed how simultaneous arrival negates the difference between P and NP versions of SJF/Priority for that specific set and disadvantages algorithms like RR.
+    \item The \textbf{burst mix} test starkly contrasted preemptive algorithms (SRTF, RR, MLFQ) against non-preemptive ones (FCFS, SJF NP, Priority NP) when long jobs could block short ones.
+    \item The \textbf{large scale} test amplified the performance differences observed in the basic test, making RR's high AWT/ATT and low ART particularly noticeable.
+\end{itemize}
+
+\subsection{CPU Utilization and Throughput Observations}
+For all four test cases presented, CPU Utilization was 100\% and Throughput was constant across all algorithms within that specific test. This indicates that for these workloads, the total CPU time required was sufficient to keep the processor busy continuously from the start of processing until the very last process completed. The total time to finish the entire set of jobs happened to be the same for all algorithms *for these specific inputs*. Therefore, utilization (Busy Time / Total Time) was 100\%, and throughput (Completed Processes / Total Time) was constant. It is important to note that workloads with significant gaps between arrivals or very low total CPU demand could result in varying utilization and throughput figures between algorithms, as some might finish the entire workload much faster or incur more idle time \citep{silberschatz2018operating}.
+
+\section{Challenges and Lessons Learned}
+The development of this C++ simulator involved several technical challenges and learning experiences:
+\begin{itemize}
+    \item \textbf{Simulation Logic Accuracy:} Ensuring the correct implementation of the discrete-time simulation loop, handling process state transitions, managing ready queues, calculating idle time, and implementing preemption rules correctly required careful design and testing. Off-by-one errors in time management or incorrect queue handling could easily lead to inaccurate metrics.
+    \item \textbf{Pointer Usage:} While useful for performance by avoiding object copies in queues/lists, using raw pointers (\texttt{Process*}) necessitated careful management to ensure they remained valid throughout the simulation lifetime. Smart pointers were considered but deemed slightly overkill for this specific scope.
+    \item \textbf{Algorithm Complexity (MLFQ):} Implementing MLFQ was significantly more complex than the other algorithms due to the need to manage multiple queues, handle process migration (demotion), implement aging (priority boost), and ensure correct preemption logic across different queue levels. Tracking the additional state per process (current queue, time in quantum, last execution time) was essential.
+    \item \textbf{Metric Calculation Precision:} Ensuring that metrics like waiting time, turnaround time, and response time were calculated based on the correct state variables (arrival, start, completion times) recorded during the simulation, especially handling edge cases like processes arriving while the CPU is idle.
+    \item \textbf{Debugging Strategy:} Primarily relied on structured code, comparison with known examples, and inserting temporary \texttt{std::cout} statements to trace simulation state (current time, running process, ready queue contents) when unexpected results occurred.
+\end{itemize}
+This project provided valuable practical experience in translating theoretical OS concepts into working code, reinforcing the trade-offs involved in algorithm design, and highlighting the importance of rigorous testing with diverse workloads.
+
+\section{Conclusion and Insights}
+This project successfully resulted in a functional C++ CPU scheduling simulator capable of executing and evaluating seven different scheduling algorithms (FCFS, SJF NP, SRTF, Priority NP, Priority P, RR, MLFQ). The simulation results obtained from various test workloads empirically demonstrate the performance trade-offs inherent in CPU scheduling, as described in operating systems theory \citep{silberschatz2018operating}.
+
+Key conclusions drawn from the analysis include:
+\begin{itemize}
+    \item No single algorithm is optimal for all metrics or workloads.
+    \item SRTF provides the best AWT/ATT but risks starvation and requires burst time prediction.
+    \item RR offers superior ART, ideal for interactive systems, but generally increases AWT/ATT.
+    \item MLFQ serves as a practical compromise, balancing responsiveness, turnaround time, and fairness through multiple queues and aging \citep{nauer}.
+    \item Non-preemptive algorithms (FCFS, SJF NP, Priority NP) are simpler but can perform poorly, especially with mixed workloads, suffering from the convoy effect.
+    \item Workload characteristics significantly impact relative algorithm performance.
+\end{itemize}
+
+For OwlTech Systems, the optimal algorithm choice depends on their specific system goals. For systems prioritizing minimal average completion time, SRTF (with aging added) might be best. For interactive systems demanding responsiveness, RR or MLFQ are preferable. MLFQ often provides the best overall balance for general-purpose computing environments. This project underscores the practical application of OS concepts and the importance of empirical evaluation in system design.
+
+\section{Code Repository}
+The complete source code for this CPU Scheduling Simulator project is available on GitHub:
+\url{https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME}
+
+\newpage
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+\end{document} 
