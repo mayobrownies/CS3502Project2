@@ -115,7 +115,7 @@ NETID: kprasad\\[0.5em]
 \newpage
 
 \begin{abstract}
-This report details the design, implementation, and evaluation of a C++ based CPU scheduling simulator developed for CS3502, Project 2. The project focused on building a console application from the ground up to simulate and compare various CPU scheduling algorithms: First-Come, First-Served (FCFS), Shortest Job First (SJF), Shortest Remaining Time First (SRTF), Priority (Preemptive and Non-Preemptive), Round Robin (RR), and Multi-Level Feedback Queue (MLFQ). The simulator processes process definitions from input files and calculates standard performance metrics, including Average Waiting Time (AWT), Average Turnaround Time (ATT), CPU Utilization, Throughput, and Average Response Time (ART). These metrics facilitate a comparative analysis of the algorithms' effectiveness under different simulated workloads, encompassing basic scenarios, larger process sets, and specific edge cases, drawing upon concepts from operating systems literature \citep{silberschatz2018operating}.
+This report details the design, implementation, and evaluation of a C++ based CPU scheduling simulator developed for CS3502, Project 2. The project focused on building a console application from the ground up to simulate and compare various CPU scheduling algorithms: First-Come, First-Served (FCFS), Shortest Job First (SJF), Shortest Remaining Time First (SRTF), Priority (Preemptive and Non-Preemptive), Round Robin (RR), and Multi-Level Feedback Queue (MLFQ). The simulator processes process definitions from input files and calculates standard performance metrics, including Average Waiting Time (AWT), Average Turnaround Time (ATT), CPU Utilization, Throughput, and Average Response Time (ART). These metrics facilitate a comparative analysis of the algorithms' effectiveness under different simulated workloads, encompassing basic scenarios, larger process sets, and specific edge cases.
 \end{abstract}
 
 \newpage
@@ -124,22 +124,21 @@ This report details the design, implementation, and evaluation of a C++ based CP
 
 \section{Introduction}
 \subsection{Overview of CPU Scheduling}
-CPU scheduling is a core operating system task concerned with allocating the CPU resource among competing processes in the ready queue. The primary goal is to enhance system performance metrics such as CPU utilization, throughput, turnaround time, waiting time, and response time \citep{silberschatz2018operating}. Different scheduling algorithms employ distinct strategies to achieve these goals, often involving trade-offs. For instance, an algorithm optimizing for throughput might increase average waiting time. Understanding these algorithms and their performance characteristics is essential for designing efficient and responsive operating systems.
+CPU scheduling is a core operating system task concerned with allocating the CPU resource among competing processes in the ready queue. The primary goal is to enhance system performance metrics such as CPU utilization, throughput, turnaround time, waiting time, and response time. Different scheduling algorithms employ distinct strategies to achieve these goals, often involving trade-offs. For instance, an algorithm optimizing for throughput might increase average waiting time. Understanding these algorithms and their performance characteristics is essential for designing efficient and responsive operating systems.
 
 \subsection{Project Goals and Context}
-This project, simulating a task for the fictional "OwlTech Systems," required the development and evaluation of a CPU scheduling simulator. The specific objectives were:
+This project required the development and evaluation of a CPU scheduling simulator. The specific objectives were:
 \begin{itemize}
     \item To implement a CPU scheduling simulator in C++.
     \item To implement standard scheduling algorithms (FCFS, SJF, Priority, RR).
-    \item To implement at least two additional algorithms not typically found in basic simulators; for this project, SRTF and MLFQ were chosen.
+    \item To implement at least two additional algorithms. For this project, SRTF and MLFQ were chosen.
     \item To accurately calculate and report key performance metrics: AWT, ATT, CPU Utilization, Throughput, and ART.
     \item To test the algorithms using various workloads (basic, large-scale, edge cases) and analyze their comparative performance.
     \item To document the design, implementation, results, and analysis in a formal report.
 \end{itemize}
-The project necessitated choosing between extending a provided C# starter code or building a new implementation; the latter approach was selected.
 
 \subsection{Implementation Approach}
-A new CPU scheduling simulator was developed from scratch using C++11/17 features and the Standard Template Library (STL). A console-based application was chosen to focus development effort on the core simulation logic and algorithm implementation rather than a graphical interface. The simulator reads process definitions from text files, allowing easy configuration of test workloads. It implements the following CPU scheduling algorithms:
+A new CPU scheduling simulator was developed from scratch using C++. A console-based application was chosen to focus development effort on the core simulation logic and algorithm implementation rather than a graphical interface. The simulator reads process definitions from text files, allowing easy configuration of test workloads. It implements the following CPU scheduling algorithms:
 \begin{itemize}
     \item FCFS
     \item SJF - Non-Preemptive
@@ -154,30 +153,27 @@ The design emphasizes modularity, with distinct components for process represent
 \section{Implementation Details}
 The C++ simulator is structured into several logical components, defined across header (\texttt{.h}) and source (\texttt{.cpp}) files.
 
-\subsection{Process Representation (\texttt{Process.h})}
+\subsection{Process Representation }
 The \texttt{Process} struct acts as the Process Control Block (PCB) for the simulation, storing vital information and state for each process.
 \begin{lstlisting}[language=C++, caption={Process Struct Definition (Process.h)}, label={lst:process_struct}, style=cppstyle]
 /**
- * @brief Represents a single process in the CPU scheduling simulation.
+ * Represents a single process in the CPU scheduling simulation.
  * Stores essential process characteristics and simulation state.
  */
 struct Process {
-    int id;             // Process ID
-    int arrivalTime;    // Time the process arrives
-    int burstTime;      // Original CPU burst time required
-    int priority;       // Priority (lower number = higher priority)
+    int id;
+    int arrivalTime;
+    int burstTime;
+    int priority;
 
-    // Metrics & State - Updated during simulation
-    int startTime = -1;         // Time process first starts execution
-    int completionTime = -1;    // Time process finishes execution
-    int waitingTime = 0;        // Total time spent waiting
-    int turnaroundTime = 0;     // Time from arrival to completion
-    int remainingBurstTime; // Time left to execute
-    int responseTime = -1;      // Time from arrival to first execution
+    int startTime = -1;
+    int completionTime = -1;
+    int waitingTime = 0;
+    int turnaroundTime = 0;
+    int remainingBurstTime;
+    int responseTime = -1;
 
-    /**
-     * @brief Constructs a Process object.
-     */
+    /** Constructs a Process object. */
     Process(int pid, int arrival, int burst, int prio)
         : id(pid), arrivalTime(arrival), burstTime(burst), 
           priority(prio), remainingBurstTime(burst) {}
@@ -185,12 +181,10 @@ struct Process {
 \end{lstlisting}
 The constructor initializes the basic process attributes and sets the initial \texttt{remainingBurstTime} equal to the total \texttt{burstTime}. Metrics like \texttt{startTime}, \texttt{completionTime}, etc., are calculated during the simulation run.
 
-\subsection{Input File Handling (\texttt{main.cpp})}
+\subsection{Input File Handling}
 Processes are loaded from a text file specified via command-line argument. The \texttt{loadProcessesFromFile} function orchestrates this, calling \texttt{parseProcessLine} for each relevant line.
-\begin{lstlisting}[language=C++, caption={Input File Parsing Logic (main.cpp - Snippet)}, style=cppstyle]
-/**
- * @brief Loads process definitions from a specified file.
- */
+\begin{lstlisting}[language=C++, caption={Input File Parsing Logic (main.cpp)}, style=cppstyle]
+/** Loads process definitions from a specified file. */
 std::vector<Process> loadProcessesFromFile(const std::string& filename) {
     std::ifstream infile(filename);
     // ... (Error handling for file open) ...
@@ -210,10 +204,7 @@ std::vector<Process> loadProcessesFromFile(const std::string& filename) {
     return processes;
 }
 
-/**
- * @brief Parses a single line from the process input file.
- * Expects format: ID,ArrivalTime,BurstTime,Priority
- */
+/** Parses a single line from the process input file. */
 Process parseProcessLine(const std::string& line) {
     // ... (Uses stringstream to parse comma-separated integers) ...
     // ... (Error handling for format and integer conversion) ...
@@ -221,7 +212,7 @@ Process parseProcessLine(const std::string& line) {
 }
 \end{lstlisting}
 
-\subsection{Simulation Core and Scheduling Logic (\texttt{Scheduler.cpp})}
+\subsection{Simulation Core and Scheduling Logic}
 Each scheduling algorithm is implemented in its own function (e.g., \texttt{runFCFS}). These functions typically share a common simulation structure:
 \begin{itemize}
     \item Initialization: Set \texttt{currentTime = 0}, initialize ready queue(s), counters, etc.
@@ -238,10 +229,10 @@ Data structures like \texttt{std::list<Process*>} and \texttt{std::queue<Process
 \begin{itemize}
     \item \textbf{SRTF}: Requires checking remaining burst times of ready processes against the running process at each time step or arrival event to handle preemption.
     \item \textbf{Priority (Preemptive)}: Similar preemption logic to SRTF but based on the \texttt{priority} field.
-    \item \textbf{MLFQ}: The most complex, requiring management of multiple queues, process migration between queues based on quantum usage, priority-based queue selection, preemption handling across queues, and an aging mechanism involving tracking \texttt{lastExecutionTime} and periodically boosting processes from lower to higher queues. A helper struct \texttt{MlfqProcessData} was used to track queue-specific state. Detailed discussion on MLFQ concepts can be found in \citep{silberschatz2018operating} and visualization in \citep{nauer}.
+    \item \textbf{MLFQ}: The most complex, requiring management of multiple queues, process migration between queues based on quantum usage, priority-based queue selection, preemption handling across queues, and an aging mechanism involving tracking \texttt{lastExecutionTime} and periodically boosting processes from lower to higher queues. A helper struct \texttt{MlfqProcessData} was used to track queue-specific state. Detailed discussion on MLFQ concepts can be found in \citep{silberschatz2018operating} and  \citep{nauer}.
 \end{itemize}
 
-\subsection{Metric Calculation and Output (\texttt{Scheduler.cpp})}
+\subsection{Metric Calculation and Output}
 The \texttt{calculateMetrics} function aggregates data from the completed processes list to compute the final performance averages (AWT, ATT, ART), CPU utilization, and throughput. The \texttt{printComparison} function uses \texttt{<iomanip>} features like \texttt{std::setw} to generate the aligned output table summarizing results from all algorithm runs.
 
 \section{Testing and Results}
@@ -256,7 +247,7 @@ The simulator's correctness and the performance characteristics of the implement
 Each input file was passed to the compiled simulator via the command line (e.g., \texttt{./scheduler basic\_test.txt}), and the resulting comparison table was recorded.
 
 \subsection{Simulation Results}
-The performance metrics for each algorithm across the four test workloads are presented below. The tables use a fixed-width font style for numerical data to aid alignment.
+The performance metrics for each algorithm across the four test workloads are presented below. 
 
 \begin{table}[htbp]
 \centering
@@ -360,7 +351,7 @@ The different test cases effectively highlighted the strengths and weaknesses:
 \end{itemize}
 
 \subsection{CPU Utilization and Throughput Observations}
-For all four test cases presented, CPU Utilization was 100\% and Throughput was constant across all algorithms within that specific test. This indicates that for these workloads, the total CPU time required was sufficient to keep the processor busy continuously from the start of processing until the very last process completed. The total time to finish the entire set of jobs happened to be the same for all algorithms *for these specific inputs*. Therefore, utilization (Busy Time / Total Time) was 100\%, and throughput (Completed Processes / Total Time) was constant. It is important to note that workloads with significant gaps between arrivals or very low total CPU demand could result in varying utilization and throughput figures between algorithms, as some might finish the entire workload much faster or incur more idle time \citep{silberschatz2018operating}.
+For all four test cases presented, CPU Utilization was 100\%, and Throughput was constant across all algorithms within that specific test. This indicates that for these workloads, the total CPU time required was sufficient to keep the processor busy continuously from the start of processing until the very last process completed. The total time to finish the entire set of jobs happened to be the same for all algorithms *for these specific inputs*. Therefore, utilization (Busy Time / Total Time) was 100\%, and throughput (Completed Processes / Total Time) was constant. It is important to note that workloads with significant gaps between arrivals or very low total CPU demand could result in varying utilization and throughput figures between algorithms, as some might finish the entire workload much faster or incur more idle time.
 
 \section{Challenges and Lessons Learned}
 The development of this C++ simulator involved several technical challenges and learning experiences:
@@ -386,11 +377,11 @@ Key conclusions drawn from the analysis include:
     \item Workload characteristics significantly impact relative algorithm performance.
 \end{itemize}
 
-For OwlTech Systems, the optimal algorithm choice depends on their specific system goals. For systems prioritizing minimal average completion time, SRTF (with aging added) might be best. For interactive systems demanding responsiveness, RR or MLFQ are preferable. MLFQ often provides the best overall balance for general-purpose computing environments. This project underscores the practical application of OS concepts and the importance of empirical evaluation in system design.
+Overall, the optimal algorithm choice depends on specific system goals. For systems prioritizing minimal average completion time, SRTF (with aging added) might be best. For interactive systems demanding responsiveness, RR or MLFQ are preferable. MLFQ often provides the best overall balance for general-purpose computing environments. This project underscores the practical application of OS concepts and the importance of empirical evaluation in system design.
 
 \section{Code Repository}
 The complete source code for this CPU Scheduling Simulator project is available on GitHub:
-\url{https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME}
+\url{https://github.com/mayobrownies/CS3502Project2}
 
 \newpage
 \bibliographystyle{ieeetr}

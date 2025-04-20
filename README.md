@@ -15,7 +15,7 @@
 │       ├── burst_mix.txt
 │       └── large_scale.txt
 ├── report/
-│   ├── main.tex
+│   ├── report.tex
 │   └── references.bib
 └── README.md
 ```
