@@ -136,13 +136,13 @@ Successfully loaded 5 processes from src/test/arrival0.txt
 --- Performance Comparison ---
 Algorithm                                    Avg Waiting    Avg Turnaround Avg Response   CPU Util (%)   Throughput (proc/unit)
 ----------------------------------------------------------------------------------------------------------------------------------
-FCFS                                         16.40          23.80          16.40          100.00         0.14
-SJF (Non-Preemptive)                         11.80          19.20          11.80          100.00         0.14
-SRTF (Preemptive SJF)                        11.80          19.20          11.80          100.00         0.14
-Priority (Non-Preemptive)                    14.20          21.60          14.20          100.00         0.14
-Priority (Preemptive)                        14.20          21.60          14.20          100.00         0.14
-Round Robin (Quantum=4)                      25.00          32.40          8.00           100.00         0.14
-MLFQ (Q0:RR8, Q1:RR16, Q2:FCFS, Age:50)      21.80          29.20          14.00          100.00         0.14
+FCFS                                         13.40          19.00          13.40          100.00         0.18
+SJF (Non-Preemptive)                         7.60           13.20          7.60           100.00         0.18
+SRTF (Preemptive SJF)                        7.60           13.20          7.60           100.00         0.18
+Priority (Non-Preemptive)                    11.20          16.80          11.20          100.00         0.18
+Priority (Preemptive)                        11.20          16.80          11.20          100.00         0.18
+Round Robin (Quantum=4)                      15.00          20.60          8.00           100.00         0.18
+MLFQ (Q0:RR8, Q1:RR16, Q2:FCFS, Age:50)      14.40          20.00          13.00          100.00         0.18
 ----------------------------
 ```
 
@@ -154,13 +154,13 @@ Successfully loaded 5 processes from src/test/burst_mix.txt
 --- Performance Comparison ---
 Algorithm                                    Avg Waiting    Avg Turnaround Avg Response   CPU Util (%)   Throughput (proc/unit)
 ----------------------------------------------------------------------------------------------------------------------------------
-FCFS                                         47.60          68.40          47.60          100.00         0.05
-SJF (Non-Preemptive)                         39.20          60.00          39.20          100.00         0.05
-SRTF (Preemptive SJF)                        12.00          32.80          0.40           100.00         0.05
-Priority (Non-Preemptive)                    56.20          77.00          56.20          100.00         0.05
-Priority (Preemptive)                        46.80          67.60          37.20          100.00         0.05
-Round Robin (Quantum=4)                      24.00          44.80          4.20           100.00         0.05
-MLFQ (Q0:RR8, Q1:RR16, Q2:FCFS, Age:50)      22.40          43.20          6.60           100.00         0.05
+FCFS                                         18.60          28.80          18.60          100.00         0.10
+SJF (Non-Preemptive)                         14.00          24.20          14.00          100.00         0.10
+SRTF (Preemptive SJF)                        5.20           15.40          4.00           100.00         0.10
+Priority (Non-Preemptive)                    23.40          33.60          23.40          100.00         0.10
+Priority (Preemptive)                        22.00          32.20          16.60          100.00         0.10
+Round Robin (Quantum=4)                      9.80           20.00          3.20           100.00         0.10
+MLFQ (Q0:RR8, Q1:RR16, Q2:FCFS, Age:50)      11.40          21.60          5.60           100.00         0.10
 ----------------------------
 ```
 
