@@ -69,6 +69,18 @@
    stringstyle={}
 }
 
+% Define simple style for Gantt charts
+\lstdefinestyle{ganttstyle}{
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    breakatwhitespace=true,
+    numbers=none,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    keepspaces=true
+}
+
 \lstset{style=cppstyle}
 
 \hypersetup{
@@ -106,7 +118,7 @@ NETID: kprasad\\[0.5em]
     {\large NETID: kprasad\par}
     \vspace{2cm}
     
-    {\large Submitted: April 25, 2025\par}
+    {\large Submitted: April 28, 2025\par}
     
     \vfill
     
@@ -151,7 +163,7 @@ A new CPU scheduling simulator was developed from scratch using C++. A console-b
 The design emphasizes modularity, with distinct components for process representation, file parsing, algorithm simulation, and results reporting.
 
 \section{Implementation Details}
-The C++ simulator is structured into several logical components, defined across header (\texttt{.h}) and source (\texttt{.cpp}) files.
+The scheduling simulator is structured into several logical components, defined across header (\texttt{.h}) and source (\texttt{.cpp}) files.
 
 \subsection{Process Representation }
 The \texttt{Process} struct acts as the Process Control Block (PCB) for the simulation, storing vital information and state for each process.
@@ -213,6 +225,8 @@ Process parseProcessLine(const std::string& line) {
 \end{lstlisting}
 
 \subsection{Simulation Core and Scheduling Logic}
+Each of the base algorithms (FCFS, SJF, Priority, RR) and additional algorithms (STRF, MLFQ) were implemented using the theory discussed in \textit{Operating System Concepts} by Silberschatz et al. \cite{silberschatz2018operating}.
+
 Each scheduling algorithm is implemented in its own function (e.g., \texttt{runFCFS}). These functions typically share a common simulation structure:
 \begin{itemize}
     \item Initialization: Set \texttt{currentTime = 0}, initialize ready queue(s), counters, etc.
@@ -228,8 +242,7 @@ Data structures like \texttt{std::list<Process*>} and \texttt{std::queue<Process
 \subsection{Specific Algorithm Implementation Notes}
 \begin{itemize}
     \item \textbf{SRTF}: Requires checking remaining burst times of ready processes against the running process at each time step or arrival event to handle preemption.
-    \item \textbf{Priority (Preemptive)}: Similar preemption logic to SRTF but based on the \texttt{priority} field.
-    \item \textbf{MLFQ}: The most complex, requiring management of multiple queues, process migration between queues based on quantum usage, priority-based queue selection, preemption handling across queues, and an aging mechanism involving tracking \texttt{lastExecutionTime} and periodically boosting processes from lower to higher queues. A helper struct \texttt{MlfqProcessData} was used to track queue-specific state. Detailed discussion on MLFQ concepts can be found in \citep{silberschatz2018operating} and  \citep{nauer}.
+    \item \textbf{MLFQ}: The most complex, requiring management of multiple queues, process migration between queues based on quantum usage, priority-based queue selection, preemption handling across queues, and an aging mechanism involving tracking \texttt{lastExecutionTime} and periodically boosting processes from lower to higher queues. A helper struct \texttt{MlfqProcessData} was used to track queue-specific state. Further discussion on MLFQ concepts can be found in Neso Academy's MLFQ video \citep{nacademy}.
 \end{itemize}
 
 \subsection{Metric Calculation and Output}
@@ -329,16 +342,234 @@ MLFQ (Q0:RR8, Q1:RR16, Q2:FCFS, Age:50)      & 150.12        & 161.68           
 \end{tabular}
 \end{table}
 
+\newpage
+\subsection{Gantt Charts for Basic Test Case}
+
+To visualize the execution flow for the basic tests, the following Gantt charts illustrate which process holds the CPU at each time unit. These charts are based on the assumed input data:
+
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+Process ID & Arrival Time & Burst Time & Priority \\
+\midrule
+ P1         & 0            & 8          & 3        \\
+ P2         & 1            & 4          & 1        \\
+ P3         & 2            & 9          & 4        \\
+ P4         & 3            & 5          & 2        \\
+ P5         & 4            & 2          & 5        \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: FCFS (basic\_test.txt)}, label={lst:gantt_fcfs}]
+Time: 0         8         12        21        26   28
+      |=========|=========|=========|=========|====|
+CPU:  | P1      | P2      | P3      | P4      | P5 |
+      |=========|=========|=========|=========|====|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: SJF - Non-Preemptive (basic\_test.txt)}, label={lst:gantt_sjfnp}]
+Time: 0         8   10    14    19              28
+      |=========|===|=====|=====|===============|
+CPU:  | P1      |P5 | P2  | P4  | P3            |
+      |=========|===|=====|=====|===============|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: SRTF - Preemptive SJF (basic\_test.txt)}, label={lst:gantt_srtf}]
+Time: 0 1         5   7         12        19              28
+      |==|=========|===|=========|=========|===============|
+CPU:  |P1| P2      |P5 | P4      | P1      | P3            |
+      |==|=========|===|=========|=========|===============|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: Priority - Non-Preemptive (basic\_test.txt)}, label={lst:gantt_prio_np}]
+Time: 0         8         12    17              26   28
+      |=========|=========|=====|===============|====|
+CPU:  | P1      | P2      | P4  | P3            | P5 |
+      |=========|=========|=====|===============|====|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: Priority - Preemptive (basic\_test.txt)}, label={lst:gantt_prio_p}]
+Time: 0  1         5         10        17              26   28
+      |==|=========|=========|=========|===============|====|
+CPU:  |P1| P2      | P4     | P1       | P3            | P5 |
+      |==|=========|=========|=========|===============|====|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: Round Robin, Q=4 (basic\_test.txt)}, label={lst:gantt_rr}]
+Time: 0     4     8     12    16    20  22    26  28
+      |=====|=====|=====|=====|=====|===|=====|==|==|
+CPU:  | P1  | P2  | P3  | P4  | P1  |P5 | P3  |P4|P3|
+      |=====|=====|=====|=====|=====|===|=====|==|==|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: MLFQ (basic\_test.txt) Queue number in parentheses}, label={lst:gantt_mlfq}]
+Time: 0         8      12             20      25    27  28
+      |=========|======|==============|=======|=====|===|
+CPU:  | P1(0)   | P2(0)| P3(0)        | P4(0) |P5(0)|P3 |(1)
+      |=========|======|==============|=======|=====|===|
+\end{lstlisting}
+
+\subsection{Gantt Charts for arrival0.txt (Edge Case)}
+
+Visualizing the execution flow for the arrival at 0 scenario (all processes arrive at T=0).
+
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+Process ID & Arrival Time & Burst Time & Priority \\
+\midrule
+ P1         & 0            & 8          & 3        \\
+ P2         & 0            & 4          & 1        \\
+ P3         & 0            & 9          & 4        \\
+ P4         & 0            & 5          & 2        \\
+ P5         & 0            & 2          & 5        \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: FCFS (arrival0.txt)}, label={lst:gantt_fcfs_arrival0}]
+Time: 0         8         12        21        26   28
+      |=========|=========|=========|=========|====|
+CPU:  | P1      | P2      | P3      | P4      | P5 |
+      |=========|=========|=========|=========|====|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: SJF - Non-Preemptive (arrival0.txt)}, label={lst:gantt_sjfnp_arrival0}]
+Time: 0   2     6     11        19              28
+      |===|=====|=====|=========|===============|
+CPU:  |P5 | P2  | P4  | P1      | P3            |
+      |===|=====|=====|=========|===============|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: SRTF - Preemptive SJF (arrival0.txt)}, label={lst:gantt_srtf_arrival0}]
+Time: 0   2     6     11        19              28
+      |===|=====|=====|=========|===============|
+CPU:  |P5 | P2  | P4  | P1      | P3            |
+      |===|=====|=====|=========|===============|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: Priority - Non-Preemptive (arrival0.txt)}, label={lst:gantt_prio_np_arrival0}]
+Time: 0     4     9         17              26   28
+      |=====|=====|=========|===============|====|
+CPU:  | P2  | P4  | P1      | P3            | P5 |
+      |=====|=====|=========|===============|====|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: Priority - Preemptive (arrival0.txt)}, label={lst:gantt_prio_p_arrival0}]
+Time: 0     4     9         17              26   28
+      |=====|=====|=========|===============|====|
+CPU:  | P2  | P4  | P1      | P3            | P5 |
+      |=====|=====|=========|===============|====|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: Round Robin, Q=4 (arrival0.txt)}, label={lst:gantt_rr_arrival0}]
+Time: 0     4     8     12    16  18    22    26 27 28
+      |=====|=====|=====|=====|===|=====|=====|==|==|
+CPU:  | P1  | P2  | P3  | P4  |P5 | P1  | P3  |P4|P3|
+      |=====|=====|=====|=====|===|=====|=====|==|==|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: MLFQ (arrival0.txt) Queue number is parentheses}, label={lst:gantt_mlfq_arrival0}]
+Time: 0          8       12         20      25    27  28
+      |==========|======|===========|=======|=====|===|
+CPU:  | P1(0)    | P2(0)| P3(0)     | P4(0) |P5(0)|P3 |(1)
+      |==========|======|===========|=======|=====|===|
+\end{lstlisting}
+
+\subsection{Gantt Charts for burst\_mix.txt (Edge Case)}
+
+Visualizing the execution flow for the mixed burst scenario (mix of short and long bursts).
+
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+Process ID & Arrival Time & Burst Time & Priority \\
+\midrule
+ P1         & 0            & 20         & 3        \\
+ P2         & 2            & 2          & 1        \\
+ P3         & 4            & 1          & 4        \\
+ P4         & 6            & 25         & 2        \\
+ P5         & 8            & 3          & 5        \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: FCFS (burst\_mix.txt)}, label={lst:gantt_fcfs_burstmix}]
+Time: 0                    20  22 23                       48   51
+      |=====================|===|==|=========================|===|
+CPU:  | P1                  |P2 |P3| P4                      |P5 |
+      |=====================|===|==|=========================|===|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: SJF - Non-Preemptive (burst\_mix.txt)}, label={lst:gantt_sjfnp_burstmix}]
+Time: 0                    20  21 23  26                       51
+      |=====================|==|==|===|=========================|
+CPU:  | P1                  |P3|P2|P5 | P4                      |
+      |=====================|==|==|===|=========================|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: SRTF - Preemptive SJF (burst\_mix.txt)}, label={lst:gantt_srtf_burstmix}]
+Time: 0   2   4  5       8     11            26                       51
+      |===|===|==|=======|=====|=============|=========================|
+CPU:  |P1 |P2 |P3| P1    |P5   | P1          | P4                      |
+      |===|===|==|=======|=====|=============|=========================|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, caption={Gantt Chart: Priority - Non-Preemptive (burst\_mix.txt)}, label={lst:gantt_prio_np_burstmix}]
+Time: 0                     20  22                        47 48  51
+      |=====================|===|=========================|==|===|
+CPU:  | P1                  |P2 | P4                      |P3| P5|
+      |=====================|===|=========================|==|===|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, breaklines=false, caption={Gantt Chart: Priority - Preemptive (burst\_mix.txt)}, label={lst:gantt_prio_p_burstmix}]
+Time: 0   2   4           6                             31
+      |===|===|===========|=============================|
+CPU:  |P1 |P2 | P1        | P4                          |
+      |===|===|===========|=============================|
+      
+Time: 31                          47 48  51
+      |===========================|==|===|
+CPU:  | P1                        |P3| P5|
+      |===========================|==|===|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, breaklines=false, caption={Gantt Chart: Round Robin, Q=4 (burst\_mix.txt)}, label={lst:gantt_rr_burstmix}]
+Time: 0     4   6 7     11    15  18    22    26    30    34    38
+      |=====|===|==|=====|=====|===|=====|=====|=====|=====|=====|
+CPU:  | P1  |P2 |P3| P1  | P4  |P5 | P1  | P4  | P1  | P4  | P1  |
+      |=====|===|==|=====|=====|===|=====|=====|=====|=====|=====|
+
+Time: 38    42    46    50 51
+      |=====|=====|=====|==|
+CPU:  | P4  | P4  | P4  |P4|
+      |=====|=====|=====|==|
+\end{lstlisting}
+
+\begin{lstlisting}[style=ganttstyle, breaklines=false, caption={Gantt Chart: MLFQ (burst\_mix.txt) Queue number in parenthesis}, label={lst:gantt_mlfq_burstmix}]
+Time: 0         8    10    11       19     22           34 
+      |========|=====|=====|=========|=====|=============|
+CPU:  | P1(0)  |P2(0)|P3(0)|P4(0)    |P5(0)| P1(1)       |
+      |========|=====|=====|=========|=====|=============|
+
+Time: 34           50 51
+      |============|==|
+CPU:  | P4(1)      |P4|(2)
+      |============|==|
+\end{lstlisting}
+
+
 \section{Analysis and Discussion}
 The collected results allow for a detailed comparison of the implemented scheduling algorithms across various workload types.
 
 \subsection{Algorithm Performance Comparison}
 \begin{itemize}
     \item \textbf{FCFS}: As expected, FCFS is simple but generally inefficient in terms of average waiting and turnaround times (Tables \ref{tab:basic_results} through \ref{tab:large_results}). It performs particularly poorly when short jobs are stuck behind long ones (Table \ref{tab:burstmix_results}).
-    \item \textbf{SJF/SRTF}: These algorithms consistently provide the best or near-best performance for AWT and ATT, as they prioritize processes requiring less CPU time. SRTF, being preemptive, generally outperforms non-preemptive SJF, especially when short jobs arrive while longer ones are running (Table \ref{tab:burstmix_results}). The theoretical optimality of SRTF for AWT \citep{silberschatz2018operating} is supported by the data. Notably, in the \texttt{arrival0} scenario (Table \ref{tab:arrival0_results}), where preemption based on arrivals is impossible, SJF and SRTF yield identical results.
+    \item \textbf{SJF/SRTF}: These algorithms consistently provide the best or near-best performance for AWT and ATT, as they prioritize processes requiring less CPU time. SRTF, being preemptive, generally outperforms non-preemptive SJF, especially when short jobs arrive while longer ones are running (Table \ref{tab:burstmix_results}). Notably, in the \texttt{arrival0} scenario (Table \ref{tab:arrival0_results}), where preemption based on arrivals is impossible, SJF and SRTF yield identical results.
     \item \textbf{Priority}: Performance is highly dependent on priority assignment. Without intelligent priority setting or aging, it doesn't guarantee good performance on time-based metrics and risks starving low-priority processes. The preemptive version offers better responsiveness (lower ART) compared to the non-preemptive version (Tables \ref{tab:basic_results}, \ref{tab:large_results}), although AWT/ATT might slightly increase due to preemption overhead or specific process interactions. The \texttt{arrival0} test again shows identical results for P and NP versions due to lack of preemption triggers.
     \item \textbf{Round Robin}: RR consistently delivers the lowest (best) ART across most tests, particularly evident in the large-scale scenario (Table \ref{tab:large_results}). This confirms its suitability for interactive systems where responsiveness is key. However, this comes at the cost of significantly higher AWT and ATT compared to SJF/SRTF, reflecting the overhead associated with frequent context switching.
-    \item \textbf{MLFQ}: This algorithm demonstrates its goal of balancing competing objectives. Its AWT and ATT are generally situated between the extremes of RR and SRTF. Its ART is significantly better than non-preemptive algorithms and approaches that of RR. By prioritizing shorter/newer jobs initially (Q0) and demoting longer-running ones, while using aging to prevent starvation, it offers a compromise suitable for mixed workloads \citep{nauer}.
+    \item \textbf{MLFQ}: This algorithm demonstrates its goal of balancing competing objectives. Its AWT and ATT are generally situated between the extremes of RR and SRTF. Its ART is significantly better than non-preemptive algorithms and approaches that of RR. By prioritizing shorter/newer jobs initially (Q0) and demoting longer-running ones, while using aging to prevent starvation, it offers a compromise suitable for mixed workloads.
 \end{itemize}
 
 \subsection{Impact of Workloads}
@@ -354,7 +585,7 @@ The different test cases effectively highlighted the strengths and weaknesses:
 For all four test cases presented, CPU Utilization was 100\%, and Throughput was constant across all algorithms within that specific test. This indicates that for these workloads, the total CPU time required was sufficient to keep the processor busy continuously from the start of processing until the very last process completed. The total time to finish the entire set of jobs happened to be the same for all algorithms *for these specific inputs*. Therefore, utilization (Busy Time / Total Time) was 100\%, and throughput (Completed Processes / Total Time) was constant. It is important to note that workloads with significant gaps between arrivals or very low total CPU demand could result in varying utilization and throughput figures between algorithms, as some might finish the entire workload much faster or incur more idle time.
 
 \section{Challenges and Lessons Learned}
-The development of this C++ simulator involved several technical challenges and learning experiences:
+The development of this scheduling simulator involved several technical challenges and learning experiences:
 \begin{itemize}
     \item \textbf{Simulation Logic Accuracy:} Ensuring the correct implementation of the discrete-time simulation loop, handling process state transitions, managing ready queues, calculating idle time, and implementing preemption rules correctly required careful design and testing. Off-by-one errors in time management or incorrect queue handling could easily lead to inaccurate metrics.
     \item \textbf{Pointer Usage:} While useful for performance by avoiding object copies in queues/lists, using raw pointers (\texttt{Process*}) necessitated careful management to ensure they remained valid throughout the simulation lifetime. Smart pointers were considered but deemed slightly overkill for this specific scope.
@@ -365,14 +596,14 @@ The development of this C++ simulator involved several technical challenges and 
 This project provided valuable practical experience in translating theoretical OS concepts into working code, reinforcing the trade-offs involved in algorithm design, and highlighting the importance of rigorous testing with diverse workloads.
 
 \section{Conclusion and Insights}
-This project successfully resulted in a functional C++ CPU scheduling simulator capable of executing and evaluating seven different scheduling algorithms (FCFS, SJF NP, SRTF, Priority NP, Priority P, RR, MLFQ). The simulation results obtained from various test workloads empirically demonstrate the performance trade-offs inherent in CPU scheduling, as described in operating systems theory \citep{silberschatz2018operating}.
+This project successfully resulted in a functional C++ CPU scheduling simulator capable of executing and evaluating seven different scheduling algorithms (FCFS, SJF NP, SRTF, Priority NP, Priority P, RR, MLFQ). The simulation results obtained from various test workloads empirically demonstrate the performance trade-offs inherent in CPU scheduling.
 
 Key conclusions drawn from the analysis include:
 \begin{itemize}
     \item No single algorithm is optimal for all metrics or workloads.
     \item SRTF provides the best AWT/ATT but risks starvation and requires burst time prediction.
     \item RR offers superior ART, ideal for interactive systems, but generally increases AWT/ATT.
-    \item MLFQ serves as a practical compromise, balancing responsiveness, turnaround time, and fairness through multiple queues and aging \citep{nauer}.
+    \item MLFQ serves as a practical compromise, balancing responsiveness, turnaround time, and fairness through multiple queues and aging.
     \item Non-preemptive algorithms (FCFS, SJF NP, Priority NP) are simpler but can perform poorly, especially with mixed workloads, suffering from the convoy effect.
     \item Workload characteristics significantly impact relative algorithm performance.
 \end{itemize}
